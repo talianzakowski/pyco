@@ -27,15 +27,9 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
     
-    - name: Run tests with custom runner
+    - name: Run tests with debug runner
       run: |
         python run_tests.py
-    
-    - name: Run tests with pytest (fallback)
-      if: failure()
-      run: |
-        export PYTHONPATH="${PWD}/src:${PYTHONPATH}"
-        python -m pytest tests/ -v --tb=short
     
     - name: Test converter on sample projects
       run: |
