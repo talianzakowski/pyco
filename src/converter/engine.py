@@ -10,26 +10,25 @@ import traceback
 
 class ConversionResult:
     def __init__(
-        self, file_path: str, success: bool, output: str = "", error: str = ""
+        self,
+        file_path: str,
+        success: bool,
+        output: str = "",
+        error: str = "",
+        original_content: str = "",
     ):
         self.file_path = file_path
         self.success = success
         self.output = output
         self.error = error
-        self.changes_made = bool(output and output != self._read_original_file())
-
-    def _read_original_file(self) -> str:
-        try:
-            with open(self.file_path, "r", encoding="utf-8") as f:
-                return f.read()
-        except:
-            return ""
+        self.changes_made = bool(output and output.strip() != original_content.strip())
 
 
 class Python2to3Converter:
     def __init__(
-        self, progress_callback: Optional[Callable[[str, float], None]] = None,
-        use_fissix_second_stage: bool = True
+        self,
+        progress_callback: Optional[Callable[[str, float], None]] = None,
+        use_fissix_second_stage: bool = True,
     ):
         self.progress_callback = progress_callback
         self.conversion_results: List[ConversionResult] = []
@@ -55,38 +54,62 @@ class Python2to3Converter:
     def convert_file(self, file_path: str, backup: bool = True) -> ConversionResult:
         """Convert a single Python file from Python 2 to 3."""
         try:
+            # Read original content for change detection
+            with open(file_path, "r", encoding="utf-8") as f:
+                original_content = f.read()
+
             # Create backup if requested
             if backup:
                 backup_path = f"{file_path}.py2bak"
                 shutil.copy2(file_path, backup_path)
 
             # Stage 1: Use 2to3 for core conversion
-            result_2to3 = self._convert_with_2to3(file_path)
+            result_2to3 = self._convert_with_2to3(file_path, original_content)
             if not result_2to3.success:
                 return result_2to3
 
             # Stage 2: Use fissix for enhanced conversion (cmp parameter fix)
             if self.use_fissix_second_stage:
-                result_fissix = self._convert_with_fissix(file_path)
+                result_fissix = self._convert_with_fissix(file_path, original_content)
                 if result_fissix.success:
                     # Fissix successful, return its result
                     return result_fissix
                 else:
                     # Fissix failed, but 2to3 worked, so return 2to3 result with warning
                     warning_msg = f"2to3 succeeded but fissix enhancement failed: {result_fissix.error}"
-                    return ConversionResult(file_path, True, result_2to3.output, warning_msg)
+                    return ConversionResult(
+                        file_path,
+                        True,
+                        result_2to3.output,
+                        warning_msg,
+                        original_content,
+                    )
 
             return result_2to3
 
         except Exception as e:
+            # Try to read original content for the error case
+            try:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    original_content = f.read()
+            except Exception:
+                original_content = ""
+
             error_msg = (
                 f"Error converting {file_path}: {str(e)}\n{traceback.format_exc()}"
             )
-            return ConversionResult(file_path, False, "", error_msg)
+            return ConversionResult(file_path, False, "", error_msg, original_content)
 
-    def _convert_with_2to3(self, file_path: str) -> ConversionResult:
+    def _convert_with_2to3(
+        self, file_path: str, original_content: str = ""
+    ) -> ConversionResult:
         """Convert file using standalone 2to3 tool."""
         try:
+            # Read original content if not provided
+            if not original_content:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    original_content = f.read()
+
             # Find the 2to3 executable
             import shutil as sh
 
@@ -119,25 +142,43 @@ class Python2to3Converter:
             if result.returncode != 0:
                 # Handle errors
                 error_msg = f"2to3 failed: {result.stderr}"
-                return ConversionResult(file_path, False, "", error_msg)
+                return ConversionResult(
+                    file_path, False, "", error_msg, original_content
+                )
 
             # Read converted content
             with open(file_path, "r", encoding="utf-8") as f:
                 converted_content = f.read()
 
-            return ConversionResult(file_path, True, converted_content, "")
+            return ConversionResult(
+                file_path, True, converted_content, "", original_content
+            )
 
         except Exception as e:
             error_msg = f"2to3 conversion error: {str(e)}"
-            return ConversionResult(file_path, False, "", error_msg)
+            return ConversionResult(file_path, False, "", error_msg, original_content)
 
-    def _convert_with_fissix(self, file_path: str) -> ConversionResult:
+    def _convert_with_fissix(
+        self, file_path: str, original_content: str = ""
+    ) -> ConversionResult:
         """Convert file using fissix tool for enhanced conversion."""
         try:
+            # Read original content if not provided
+            if not original_content:
+                with open(file_path, "r", encoding="utf-8") as f:
+                    original_content = f.read()
+
             # Use the current Python environment to run fissix
             python_executable = sys.executable
-            
-            cmd = [python_executable, "-m", "fissix", "-w", "--no-diffs", os.path.abspath(file_path)]
+
+            cmd = [
+                python_executable,
+                "-m",
+                "fissix",
+                "-w",
+                "--no-diffs",
+                os.path.abspath(file_path),
+            ]
 
             result = subprocess.run(
                 cmd,
@@ -148,17 +189,21 @@ class Python2to3Converter:
             if result.returncode != 0:
                 # Handle errors
                 error_msg = f"fissix failed: {result.stderr}"
-                return ConversionResult(file_path, False, "", error_msg)
+                return ConversionResult(
+                    file_path, False, "", error_msg, original_content
+                )
 
             # Read converted content
             with open(file_path, "r", encoding="utf-8") as f:
                 converted_content = f.read()
 
-            return ConversionResult(file_path, True, converted_content, "")
+            return ConversionResult(
+                file_path, True, converted_content, "", original_content
+            )
 
         except Exception as e:
             error_msg = f"fissix conversion error: {str(e)}"
-            return ConversionResult(file_path, False, "", error_msg)
+            return ConversionResult(file_path, False, "", error_msg, original_content)
 
     def convert_directory(
         self, directory: str, backup: bool = True

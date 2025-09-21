@@ -302,7 +302,7 @@ class MainWindow:
             # Initialize converter with progress callback
             self.converter = Python2to3Converter(
                 progress_callback=self.update_progress,
-                use_fissix_second_stage=self.use_fissix_enhancement.get()
+                use_fissix_second_stage=self.use_fissix_enhancement.get(),
             )
 
             # Find Python files

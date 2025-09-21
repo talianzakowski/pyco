@@ -9,8 +9,14 @@ import importlib.util
 
 
 class ValidationResult:
-    def __init__(self, file_path: str, syntax_valid: bool = False, imports_valid: bool = False,
-                 syntax_error: str = "", import_errors: List[str] = None):
+    def __init__(
+        self,
+        file_path: str,
+        syntax_valid: bool = False,
+        imports_valid: bool = False,
+        syntax_error: str = "",
+        import_errors: List[str] = None,
+    ):
         self.file_path = file_path
         self.syntax_valid = syntax_valid
         self.imports_valid = imports_valid
@@ -30,7 +36,7 @@ class ConvertedCodeValidator:
     def validate_syntax(self, file_path: str) -> Tuple[bool, str]:
         """Validate Python 3 syntax of a file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             # Try to parse with Python 3 AST
@@ -46,7 +52,7 @@ class ConvertedCodeValidator:
     def validate_imports(self, file_path: str) -> Tuple[bool, List[str]]:
         """Validate that all imports in the file can be resolved."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             tree = ast.parse(source)
@@ -72,7 +78,7 @@ class ConvertedCodeValidator:
         """Check if a module can be imported."""
         try:
             # Skip relative imports and some known problematic modules
-            if module_name.startswith('.') or module_name in ['__main__']:
+            if module_name.startswith(".") or module_name in ["__main__"]:
                 return True
 
             # Try to find the module spec
@@ -95,7 +101,7 @@ class ConvertedCodeValidator:
             syntax_valid=syntax_valid,
             imports_valid=imports_valid,
             syntax_error=syntax_error,
-            import_errors=import_errors
+            import_errors=import_errors,
         )
 
         self.results.append(result)
@@ -106,10 +112,14 @@ class ConvertedCodeValidator:
         results = []
         for root, dirs, files in os.walk(directory):
             # Skip common non-source directories
-            dirs[:] = [d for d in dirs if d not in {'.git', '__pycache__', '.pytest_cache', 'venv', 'env'}]
+            dirs[:] = [
+                d
+                for d in dirs
+                if d not in {".git", "__pycache__", ".pytest_cache", "venv", "env"}
+            ]
 
             for file in files:
-                if file.endswith('.py'):
+                if file.endswith(".py"):
                     file_path = os.path.join(root, file)
                     result = self.validate_file(file_path)
                     results.append(result)
@@ -124,11 +134,11 @@ class ConvertedCodeValidator:
         import_errors = sum(1 for r in self.results if not r.imports_valid)
 
         return {
-            'total': total,
-            'valid': valid,
-            'invalid': total - valid,
-            'syntax_errors': syntax_errors,
-            'import_errors': import_errors
+            "total": total,
+            "valid": valid,
+            "invalid": total - valid,
+            "syntax_errors": syntax_errors,
+            "import_errors": import_errors,
         }
 
     def get_failed_validations(self) -> List[ValidationResult]:
@@ -136,7 +146,7 @@ class ConvertedCodeValidator:
         return [r for r in self.results if not r.overall_valid]
 
 
-class TestGenerator:
+class ConversionTestGenerator:
     """Generate basic tests for converted Python files."""
 
     def __init__(self):
@@ -177,7 +187,9 @@ if __name__ == '__main__':
     unittest.main()
 '''
 
-    def generate_test_for_file(self, file_path: str, test_dir: str = "tests") -> Optional[str]:
+    def generate_test_for_file(
+        self, file_path: str, test_dir: str = "tests"
+    ) -> Optional[str]:
         """Generate a basic test file for a Python module."""
         try:
             # Create test directory if it doesn't exist
@@ -185,21 +197,21 @@ if __name__ == '__main__':
             test_path.mkdir(exist_ok=True)
 
             # Parse the module to understand its structure
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 source = f.read()
 
             tree = ast.parse(source)
 
             # Extract module information
             module_name = Path(file_path).stem
-            class_name = module_name.replace('_', ' ').title().replace(' ', '')
+            class_name = module_name.replace("_", " ").title().replace(" ", "")
 
             # Find functions and classes
             functions = []
             classes = []
 
             for node in ast.walk(tree):
-                if isinstance(node, ast.FunctionDef) and not node.name.startswith('_'):
+                if isinstance(node, ast.FunctionDef) and not node.name.startswith("_"):
                     functions.append(node.name)
                 elif isinstance(node, ast.ClassDef):
                     classes.append(node.name)
@@ -236,12 +248,12 @@ if __name__ == '__main__':
             test_content = self.test_template.format(
                 module_name=module_name,
                 class_name=class_name,
-                additional_tests=''.join(additional_tests)
+                additional_tests="".join(additional_tests),
             )
 
             # Write test file
             test_file_path = test_path / f"test_{module_name}.py"
-            with open(test_file_path, 'w', encoding='utf-8') as f:
+            with open(test_file_path, "w", encoding="utf-8") as f:
                 f.write(test_content)
 
             return str(test_file_path)
@@ -250,18 +262,31 @@ if __name__ == '__main__':
             print(f"Failed to generate test for {file_path}: {e}")
             return None
 
-    def generate_tests_for_directory(self, source_dir: str, test_dir: str = "tests") -> List[str]:
+    def generate_tests_for_directory(
+        self, source_dir: str, test_dir: str = "tests"
+    ) -> List[str]:
         """Generate test files for all Python files in a directory."""
         generated_tests = []
 
         for root, dirs, files in os.walk(source_dir):
             # Skip test directories and common non-source directories
-            dirs[:] = [d for d in dirs if d not in {
-                'tests', 'test', '.git', '__pycache__', '.pytest_cache', 'venv', 'env'
-            }]
+            dirs[:] = [
+                d
+                for d in dirs
+                if d
+                not in {
+                    "tests",
+                    "test",
+                    ".git",
+                    "__pycache__",
+                    ".pytest_cache",
+                    "venv",
+                    "env",
+                }
+            ]
 
             for file in files:
-                if file.endswith('.py') and not file.startswith('test_'):
+                if file.endswith(".py") and not file.startswith("test_"):
                     file_path = os.path.join(root, file)
                     test_file = self.generate_test_for_file(file_path, test_dir)
                     if test_file:
@@ -274,23 +299,18 @@ if __name__ == '__main__':
         try:
             # Run pytest on the test directory
             result = subprocess.run(
-                [sys.executable, '-m', 'pytest', test_dir, '-v', '--tb=short'],
+                [sys.executable, "-m", "pytest", test_dir, "-v", "--tb=short"],
                 capture_output=True,
                 text=True,
-                cwd=os.getcwd()
+                cwd=os.getcwd(),
             )
 
             return {
-                'success': result.returncode == 0,
-                'stdout': result.stdout,
-                'stderr': result.stderr,
-                'returncode': result.returncode
+                "success": result.returncode == 0,
+                "stdout": result.stdout,
+                "stderr": result.stderr,
+                "returncode": result.returncode,
             }
 
         except Exception as e:
-            return {
-                'success': False,
-                'stdout': '',
-                'stderr': str(e),
-                'returncode': -1
-            }
+            return {"success": False, "stdout": "", "stderr": str(e), "returncode": -1}
