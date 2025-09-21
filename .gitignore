@@ -63,10 +63,12 @@ coverage.xml
 ehthumbs.db
 Thumbs.db
 
-# Temporary test files
-test_*.py
-temp_*.py
+# Temporary test files (but not tests/ directory)
+temp_test_*.py
+debug_test_*.py
 sample_*.py
+validation_test.py
+simple_test.py
 
 # Coverage reports
 htmlcov/
