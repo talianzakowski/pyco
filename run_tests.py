@@ -36,9 +36,9 @@ for test_file in test_files:
         spec = importlib.util.spec_from_file_location("test_module", test_file)
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
-        print(f"✅ {test_file} imported successfully")
+        print(f"[OK] {test_file} imported successfully")
     except Exception as e:
-        print(f"❌ {test_file} import failed: {e}")
+        print(f"[ERROR] {test_file} import failed: {e}")
         print(f"   Error type: {type(e).__name__}")
         import traceback
         traceback.print_exc()
@@ -51,7 +51,7 @@ loader = unittest.TestLoader()
 try:
     suite = loader.discover('tests', pattern='test_*.py')
     test_count = suite.countTestCases()
-    print(f"✅ Test discovery successful: {test_count} tests found")
+    print(f"[OK] Test discovery successful: {test_count} tests found")
     
     if test_count > 0:
         print("\n=== Running Tests ===")
@@ -59,17 +59,17 @@ try:
         result = runner.run(suite)
         
         if result.wasSuccessful():
-            print("✅ All tests passed!")
+            print("[OK] All tests passed!")
             sys.exit(0)
         else:
-            print(f"❌ Tests failed: {len(result.failures)} failures, {len(result.errors)} errors")
+            print(f"[ERROR] Tests failed: {len(result.failures)} failures, {len(result.errors)} errors")
             sys.exit(1)
     else:
-        print("❌ No tests discovered")
+        print("[ERROR] No tests discovered")
         sys.exit(1)
         
 except Exception as e:
-    print(f"❌ Test discovery failed: {e}")
+    print(f"[ERROR] Test discovery failed: {e}")
     import traceback
     traceback.print_exc()
     sys.exit(1)
