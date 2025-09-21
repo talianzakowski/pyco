@@ -48,6 +48,12 @@ logs/*.html
 *.py2bak
 *.bak
 
+# Coverage files (if running locally)
+.coverage
+.coveragerc
+htmlcov/
+coverage.xml
+
 # OS
 .DS_Store
 .DS_Store?

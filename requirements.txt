@@ -4,7 +4,6 @@ fissix>=24.4.0
 
 # Development and testing
 pytest>=8.0.0
-pytest-cov>=7.0.0
 
 # Code quality and formatting (optional)
 Pygments>=2.19.0
