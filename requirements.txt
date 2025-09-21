@@ -1,0 +1,13 @@
+# Python 2 to 3 Converter Dependencies
+# Core conversion tools
+fissix>=24.4.0
+
+# Development and testing
+pytest>=8.0.0
+pytest-cov>=7.0.0
+
+# Code quality and formatting (optional)
+Pygments>=2.19.0
+
+# Note: tkinter is included with Python standard library
+# Note: 2to3 tool is included with Python installation
