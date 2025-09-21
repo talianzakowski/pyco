@@ -38,7 +38,7 @@ print "Number:", 42
 
         result = self.converter.convert_file(file_path, backup=False)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result.success, f"Conversion failed: {result.error}")
         self.assertTrue(result.changes_made)
 
         # Read converted content
@@ -57,7 +57,7 @@ raw_text = ur"Raw unicode"
 
         result = self.converter.convert_file(file_path, backup=False)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result.success, f"Unicode test failed: {result.error}")
 
     def test_python2_imports_conversion(self):
         """Test conversion of Python 2 imports."""
@@ -68,7 +68,7 @@ from urlparse import urlparse
 
         result = self.converter.convert_file(file_path, backup=False)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result.success, f"Imports test failed: {result.error}")
 
     def test_already_python3_file(self):
         """Test that Python 3 files are handled correctly."""
@@ -80,7 +80,7 @@ def test():
 
         result = self.converter.convert_file(file_path, backup=False)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result.success, f"Python3 file test failed: {result.error}")
         # Should not make changes to already valid Python 3 code
         # (though fissix might still make minor formatting changes)
 
@@ -91,7 +91,7 @@ def test():
 
         result = self.converter.convert_file(file_path, backup=True)
 
-        self.assertTrue(result.success)
+        self.assertTrue(result.success, f"Backup test failed: {result.error}")
 
         # Check backup file exists
         backup_path = file_path + ".py2bak"
@@ -146,6 +146,10 @@ def broken_function(
         results = self.converter.convert_directory(self.temp_dir, backup=True)
 
         self.assertEqual(len(results), 2)
+        failed_results = [r for r in results if not r.success]
+        if failed_results:
+            error_details = "; ".join([f"{r.file_path}: {r.error}" for r in failed_results])
+            self.fail(f"Directory conversion failed for some files: {error_details}")
         self.assertTrue(all(r.success for r in results))
 
         # Check summary
