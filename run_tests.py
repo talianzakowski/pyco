@@ -24,7 +24,7 @@ for root, dirs, files in os.walk('tests'):
             print(f"Found: {full_path}")
 
 if not test_files:
-    print("❌ No test files found!")
+    print("[ERROR] No test files found!")
     sys.exit(1)
 
 # Try to import test modules

@@ -47,5 +47,5 @@ jobs:
         advanced_files = converter.find_python_files('test-py2-advanced')
         print(f'Found {len(advanced_files)} files in advanced project')
         
-        print('✅ Sample projects validated')
+        print('[OK] Sample projects validated')
         "
