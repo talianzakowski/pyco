@@ -58,6 +58,19 @@ try:
         runner = unittest.TextTestRunner(verbosity=2)
         result = runner.run(suite)
         
+        # Print additional error details for failed tests
+        if not result.wasSuccessful():
+            print(f"\n=== Test Failure Details ===")
+            for failure in result.failures:
+                test_name = str(failure[0])
+                print(f"\nFAILED: {test_name}")
+                print(f"Traceback: {failure[1]}")
+            
+            for error in result.errors:
+                test_name = str(error[0])
+                print(f"\nERROR: {test_name}")
+                print(f"Details: {error[1]}")
+        
         if result.wasSuccessful():
             print("[OK] All tests passed!")
             sys.exit(0)

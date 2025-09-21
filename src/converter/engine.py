@@ -112,17 +112,43 @@ class Python2to3Converter:
 
             # Find the 2to3 executable
             import shutil as sh
+            import platform
 
             tool_2to3 = sh.which("2to3")
             if not tool_2to3:
+                # Try Windows executable name
+                tool_2to3 = sh.which("2to3.exe")
+            
+            if not tool_2to3:
                 # Try to find it in common Python installation paths
-                possible_paths = [
-                    "/Library/Frameworks/Python.framework/Versions/3.11/bin/2to3",
-                    "/usr/bin/2to3",
-                    "/usr/local/bin/2to3",
-                ]
+                system = platform.system().lower()
+                if system == "windows":
+                    # Windows paths
+                    import sys
+                    python_dir = os.path.dirname(sys.executable)
+                    possible_paths = [
+                        os.path.join(python_dir, "Scripts", "2to3.exe"),
+                        os.path.join(python_dir, "Tools", "scripts", "2to3.py"),
+                        r"C:\Python*\Scripts\2to3.exe",
+                        r"C:\Python*\Tools\scripts\2to3.py",
+                    ]
+                else:
+                    # Unix/Linux/macOS paths
+                    possible_paths = [
+                        "/Library/Frameworks/Python.framework/Versions/3.11/bin/2to3",
+                        "/usr/bin/2to3",
+                        "/usr/local/bin/2to3",
+                    ]
+                
                 for path in possible_paths:
-                    if os.path.exists(path):
+                    if "*" in path:
+                        # Handle wildcard paths for Windows
+                        import glob
+                        matches = glob.glob(path)
+                        if matches:
+                            tool_2to3 = matches[0]
+                            break
+                    elif os.path.exists(path):
                         tool_2to3 = path
                         break
 
@@ -131,7 +157,11 @@ class Python2to3Converter:
                         "Could not find 2to3 tool. Please ensure Python is properly installed."
                     )
 
-            cmd = [tool_2to3, "-w", "--no-diffs", os.path.abspath(file_path)]
+            # Build command - if tool_2to3 is a .py file, run it with Python
+            if tool_2to3.endswith('.py'):
+                cmd = [sys.executable, tool_2to3, "-w", "--no-diffs", os.path.abspath(file_path)]
+            else:
+                cmd = [tool_2to3, "-w", "--no-diffs", os.path.abspath(file_path)]
 
             result = subprocess.run(
                 cmd,
