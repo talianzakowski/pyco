@@ -148,7 +148,9 @@ def broken_function(
         self.assertEqual(len(results), 2)
         failed_results = [r for r in results if not r.success]
         if failed_results:
-            error_details = "; ".join([f"{r.file_path}: {r.error}" for r in failed_results])
+            error_details = "; ".join(
+                [f"{r.file_path}: {r.error}" for r in failed_results]
+            )
             self.fail(f"Directory conversion failed for some files: {error_details}")
         self.assertTrue(all(r.success for r in results))
 

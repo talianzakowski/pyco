@@ -118,13 +118,14 @@ class Python2to3Converter:
             if not tool_2to3:
                 # Try Windows executable name
                 tool_2to3 = sh.which("2to3.exe")
-            
+
             if not tool_2to3:
                 # Try to find it in common Python installation paths
                 system = platform.system().lower()
                 if system == "windows":
                     # Windows paths
                     import sys
+
                     python_dir = os.path.dirname(sys.executable)
                     possible_paths = [
                         os.path.join(python_dir, "Scripts", "2to3.exe"),
@@ -139,11 +140,12 @@ class Python2to3Converter:
                         "/usr/bin/2to3",
                         "/usr/local/bin/2to3",
                     ]
-                
+
                 for path in possible_paths:
                     if "*" in path:
                         # Handle wildcard paths for Windows
                         import glob
+
                         matches = glob.glob(path)
                         if matches:
                             tool_2to3 = matches[0]
@@ -156,13 +158,16 @@ class Python2to3Converter:
                     # Last resort: try to find lib2to3 directly
                     try:
                         import lib2to3.main
+
                         tool_2to3 = "lib2to3.main"
                     except ImportError:
                         # Debug information for troubleshooting
                         debug_info = f"Python executable: {sys.executable}\n"
-                        debug_info += f"Python directory: {os.path.dirname(sys.executable)}\n"
+                        debug_info += (
+                            f"Python directory: {os.path.dirname(sys.executable)}\n"
+                        )
                         debug_info += f"System: {platform.system()}\n"
-                        
+
                         raise RuntimeError(
                             f"Could not find 2to3 tool. Debug info:\n{debug_info}\n"
                             "Please ensure Python is properly installed with the standard library tools."
@@ -171,9 +176,22 @@ class Python2to3Converter:
             # Build command
             if tool_2to3 == "lib2to3.main":
                 # Use lib2to3 directly through Python
-                cmd = [sys.executable, "-m", "lib2to3", "-w", "--no-diffs", os.path.abspath(file_path)]
-            elif tool_2to3.endswith('.py'):
-                cmd = [sys.executable, tool_2to3, "-w", "--no-diffs", os.path.abspath(file_path)]
+                cmd = [
+                    sys.executable,
+                    "-m",
+                    "lib2to3",
+                    "-w",
+                    "--no-diffs",
+                    os.path.abspath(file_path),
+                ]
+            elif tool_2to3.endswith(".py"):
+                cmd = [
+                    sys.executable,
+                    tool_2to3,
+                    "-w",
+                    "--no-diffs",
+                    os.path.abspath(file_path),
+                ]
             else:
                 cmd = [tool_2to3, "-w", "--no-diffs", os.path.abspath(file_path)]
 

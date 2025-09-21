@@ -2,6 +2,7 @@
 """
 Minimal test runner for GitHub Actions debugging
 """
+
 import sys
 import os
 
@@ -16,9 +17,9 @@ print(f"Added to path: {os.path.join(os.path.dirname(__file__), 'src')}")
 # List test files
 print("\n=== Test Files ===")
 test_files = []
-for root, dirs, files in os.walk('tests'):
+for root, dirs, files in os.walk("tests"):
     for file in files:
-        if file.startswith('test_') and file.endswith('.py'):
+        if file.startswith("test_") and file.endswith(".py"):
             full_path = os.path.join(root, file)
             test_files.append(full_path)
             print(f"Found: {full_path}")
@@ -41,6 +42,7 @@ for test_file in test_files:
         print(f"[ERROR] {test_file} import failed: {e}")
         print(f"   Error type: {type(e).__name__}")
         import traceback
+
         traceback.print_exc()
 
 # Now try unittest discovery
@@ -49,15 +51,15 @@ import unittest
 
 loader = unittest.TestLoader()
 try:
-    suite = loader.discover('tests', pattern='test_*.py')
+    suite = loader.discover("tests", pattern="test_*.py")
     test_count = suite.countTestCases()
     print(f"[OK] Test discovery successful: {test_count} tests found")
-    
+
     if test_count > 0:
         print("\n=== Running Tests ===")
         runner = unittest.TextTestRunner(verbosity=2)
         result = runner.run(suite)
-        
+
         # Print additional error details for failed tests
         if not result.wasSuccessful():
             print(f"\n=== Test Failure Details ===")
@@ -65,24 +67,27 @@ try:
                 test_name = str(failure[0])
                 print(f"\nFAILED: {test_name}")
                 print(f"Traceback: {failure[1]}")
-            
+
             for error in result.errors:
                 test_name = str(error[0])
                 print(f"\nERROR: {test_name}")
                 print(f"Details: {error[1]}")
-        
+
         if result.wasSuccessful():
             print("[OK] All tests passed!")
             sys.exit(0)
         else:
-            print(f"[ERROR] Tests failed: {len(result.failures)} failures, {len(result.errors)} errors")
+            print(
+                f"[ERROR] Tests failed: {len(result.failures)} failures, {len(result.errors)} errors"
+            )
             sys.exit(1)
     else:
         print("[ERROR] No tests discovered")
         sys.exit(1)
-        
+
 except Exception as e:
     print(f"[ERROR] Test discovery failed: {e}")
     import traceback
+
     traceback.print_exc()
     sys.exit(1)
